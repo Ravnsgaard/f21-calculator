@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 import { CommitTerm, Currency } from "../constants";
 import { recommend } from "../utils/recommend";
 import { ensureRates } from "../utils/currency";
-import ResultCard from "./ResultCard";
+import { ResultCard } from "./ResultCard";          // ← named import
 
 interface FormValues {
   trafficTB: number;
@@ -41,23 +41,20 @@ const defaults: FormValues = {
 
 export default function CostCalculator() {
   const { control, watch } = useForm<FormValues>({ defaultValues: defaults });
-  const v = watch();                                          // ← KEEP THIS LINE
+  const v = watch();                                   // ← required
 
-  /* fetch FX rates once the user picks a non-EUR currency */
-  const [, setReady] = useState(false);
+  // fetch FX rates once a non-EUR currency is picked
   useEffect(() => {
-    if (v.currency !== "EUR") ensureRates().then(() => setReady(true));
+    if (v.currency !== "EUR") ensureRates();
   }, [v.currency]);
 
   const { plan, cost } = recommend(v);
-
-  /* reusable prop for 50 % width */
-  const halfWidth = { sx: { width: "50%" } };
+  const half = { sx: { width: "50%" } };               // shared width
 
   return (
     <Stack gap={4}>
       <Grid container rowSpacing={3}>
-        {/* ─── Sliders ────────────────────────────────────────── */}
+        {/* ── Sliders ────────────────────────────────────────── */}
         <Grid item xs={12}>
           <Typography gutterBottom>
             Traffic (TB/mo) — <strong>{v.trafficTB}</strong>
@@ -66,7 +63,7 @@ export default function CostCalculator() {
             name="trafficTB"
             control={control}
             render={({ field }) => (
-              <Slider {...field} {...halfWidth} min={1} max={100} step={1} marks valueLabelDisplay="auto" />
+              <Slider {...field} {...half} min={1} max={100} step={1} marks valueLabelDisplay="auto" />
             )}
           />
         </Grid>
@@ -79,7 +76,7 @@ export default function CostCalculator() {
             name="customDomains"
             control={control}
             render={({ field }) => (
-              <Slider {...field} {...halfWidth} min={1} max={200} step={1} marks valueLabelDisplay="auto" />
+              <Slider {...field} {...half} min={1} max={200} step={1} marks valueLabelDisplay="auto" />
             )}
           />
         </Grid>
@@ -92,12 +89,12 @@ export default function CostCalculator() {
             name="computeBlocks"
             control={control}
             render={({ field }) => (
-              <Slider {...field} {...halfWidth} min={1} max={100} step={1} marks valueLabelDisplay="auto" />
+              <Slider {...field} {...half} min={1} max={100} step={1} marks valueLabelDisplay="auto" />
             )}
           />
         </Grid>
 
-        {/* ─── Checkboxes ─────────────────────────────────────── */}
+        {/* ── Checkboxes ─────────────────────────────────────── */}
         <Grid item xs={12}>
           <FormControlLabel
             control={<Controller name="china" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />}
@@ -112,7 +109,7 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ─── Commit term toggle ─────────────────────────────── */}
+        {/* ── Commit term toggle ─────────────────────────────── */}
         <Grid item xs={12}>
           <Typography gutterBottom>Commit Term</Typography>
           <Controller
@@ -121,7 +118,7 @@ export default function CostCalculator() {
             render={({ field }) => (
               <ToggleButtonGroup
                 exclusive
-                {...halfWidth}
+                {...half}
                 {...field}
                 onChange={(_, val) => val && field.onChange(val)}
               >
@@ -133,4 +130,32 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ───*
+        {/* ── Currency dropdown ──────────────────────────────── */}
+        <Grid item xs={12}>
+          <Typography gutterBottom>Currency</Typography>
+          <Controller
+            name="currency"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                select
+                fullWidth
+                {...half}
+                {...field}
+                onChange={(e) => field.onChange(e.target.value as Currency)}
+              >
+                {["EUR", "USD", "DKK", "GBP", "SEK", "NOK"].map((c) => (
+                  <MenuItem key={c} value={c}>
+                    {c}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+          />
+        </Grid>
+      </Grid>
+
+      <ResultCard plan={plan} cost={cost} currency={v.currency} />
+    </Stack>
+  );
+}
