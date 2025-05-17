@@ -1,12 +1,22 @@
 "use client";
-import { Card, CardContent, Stack, Typography } from "@mui/material";
+import { Card, CardContent, Stack, Typography, Box } from "@mui/material";
 import { Plan } from "../data/plans";
 import { Currency } from "../constants";
 import { fmt } from "../utils/currency";
 
+const tint: Record<string, string> = {
+  "basic-2": "#ECEFF1",
+  "basic-5": "#CFD8DC",
+  "edge-regional": "#B3E5FC",
+  "edge-global-30": "#C8E6C9",
+  "edge-global-50": "#A5D6A7",
+  "edge-global-100": "#81C784",
+  "edge-dedicated": "#80DEEA"
+};
+
 interface Props {
   plan: Plan;
-  priceEUR: number;   // base EUR monthly price (3-yr commit)
+  priceEUR: number;
   currency: Currency;
   selected: boolean;
 }
@@ -25,6 +35,9 @@ export function PlanCard({ plan, priceEUR, currency, selected }: Props) {
         borderColor: selected ? "primary.main" : "divider"
       }}
     >
+      {/* colored header */}
+      <Box sx={{ height: 6, bgcolor: tint[plan.id] ?? "grey.200" }} />
+
       <CardContent>
         <Stack spacing={0.5}>
           <Typography variant="subtitle1" fontWeight={600}>
