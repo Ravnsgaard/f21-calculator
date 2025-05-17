@@ -1,15 +1,29 @@
 import type { Currency } from "../constants";
 
-const cache: Partial<Record<Currency, number>> = { EUR: 1 };
+/**
+ * Browser-side FX helper.
+ * 1. Cache starts with { EUR: 1 }.
+ * 2. First time user selects a non-EUR currency, we fetch live rates from
+ *    https://api.exchangerate.host (CORS-enabled) and merge into the cache.
+ * 3. Caller can await `ensureRates()` then call `rate(code)` or `fmt(value, code)`.
+ */
 
-/** Fetch EUR-base FX rates from our API route once per session. */
-export async function loadRates() {
-  if (cache.USD) return;                             // already cached
+const cache: Partial<Record<Currency, number>> = { EUR: 1 };
+const symbols = "USD,DKK,GBP,SEK,NOK";
+const url = `https://api.exchangerate.host/latest?base=EUR&symbols=${symbols}`;
+
+let fetching = false;
+
+export async function ensureRates() {
+  if (cache.USD || fetching) return;          // already loaded or in-flight
+  fetching = true;
   try {
-    const rates = await fetch("/api/rates").then((r) => r.json());
+    const { rates } = await fetch(url).then((r) => r.json());
     Object.assign(cache, rates as Record<Currency, number>);
   } catch {
-    /* network error → leave cache as 1s */
+    /* network error – keep EUR-only */
+  } finally {
+    fetching = false;
   }
 }
 
