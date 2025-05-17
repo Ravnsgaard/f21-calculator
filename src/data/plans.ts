@@ -17,7 +17,7 @@ export interface Plan {
 export const plans: Plan[] = [
   {
     id: "basic-2",
-    name: "Basic 2",
+    name: "IDO Edge Basic 2",
     monthlyRate: 450,
     features: {
       customDomains: 2,
@@ -29,7 +29,7 @@ export const plans: Plan[] = [
     }
   },
   {
-    id: "basic-5",
+    id: "IDO Edge basic-5",
     name: "Basic 5",
     monthlyRate: 675,
     features: {
