@@ -1,11 +1,18 @@
 import type { Currency } from "../constants";
 
 const cache: Partial<Record<Currency, number>> = { EUR: 1 };
+const symbols = "USD,DKK,GBP,SEK,NOK";
+const url = `https://api.exchangerate.host/latest?base=EUR&symbols=${symbols}`;
 
+/** Fetch and cache FX rates the first time a non-EUR currency is selected. */
 export async function loadRates() {
-  if (cache.USD) return;               // already have rates
-  const data = await fetch("/api/rates").then((r) => r.json());
-  Object.assign(cache, data as Record<Currency, number>);
+  if (cache.USD) return;                     // already cached
+  try {
+    const { rates } = await fetch(url).then((r) => r.json());
+    Object.assign(cache, rates as Record<Currency, number>);
+  } catch {
+    /* network error → keep cache as-is (all conversions = 1:1) */
+  }
 }
 
 export function rate(c: Currency) {
