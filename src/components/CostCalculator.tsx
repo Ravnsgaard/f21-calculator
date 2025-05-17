@@ -15,7 +15,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { CommitTerm, Currency } from "../constants";
 import { recommend } from "../utils/recommend";
-import { loadRates, rate } from "../utils/currency";
+import { loadRates } from "../utils/currency";
 import { ResultCard } from "./ResultCard";
 
 interface FormValues {
@@ -28,7 +28,7 @@ interface FormValues {
   currency: Currency;
 }
 
-/* Default = Edge Global 30 quotas */
+/* Default = Edge Global 30 */
 const defaults: FormValues = {
   trafficTB: 3,
   customDomains: 30,
@@ -42,31 +42,22 @@ const defaults: FormValues = {
 export default function CostCalculator() {
   const { control, watch } = useForm<FormValues>({ defaultValues: defaults });
   const v = watch();
+  const [, tick] = useState(0);            // used only to re-render after FX fetch
 
-  /* trigger a re-render after FX rates arrive */
-  const [, bump] = useState(0);
+  /* load FX rates the first time a non-EUR currency is chosen */
   useEffect(() => {
     if (v.currency !== "EUR") {
-      loadRates().then(() => bump((n) => n + 1));
+      loadRates().then(() => tick((n) => n + 1));
     }
   }, [v.currency]);
 
-  /* compute costs – convert with latest rate() every render */
-  const { plan, cost: eur } = recommend(v);
-  const fx = rate(v.currency);
-  const cost = {
-    base: eur.base * fx,
-    overT: eur.overT * fx,
-    overB: eur.overB * fx,
-    total: eur.total * fx
-  };
-
+  const { plan, cost } = recommend(v);     // costs stay in EUR; ResultCard does conversion
   const half = { sx: { width: "50%" } };
 
   return (
     <Stack gap={4}>
       <Grid container rowSpacing={3}>
-        {/* ── Sliders ─────────────────────────── */}
+        {/* ── Sliders ───────────────────────── */}
         <Grid item xs={12}>
           <Typography gutterBottom>
             Traffic (TB/mo) — <strong>{v.trafficTB}</strong>
@@ -79,7 +70,6 @@ export default function CostCalculator() {
             )}
           />
         </Grid>
-
         <Grid item xs={12}>
           <Typography gutterBottom>
             Custom Domains — <strong>{v.customDomains}</strong>
@@ -92,7 +82,6 @@ export default function CostCalculator() {
             )}
           />
         </Grid>
-
         <Grid item xs={12}>
           <Typography gutterBottom>
             Compute Blocks — <strong>{v.computeBlocks}</strong>
@@ -106,7 +95,7 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ── Checkboxes ─────────────────────── */}
+        {/* ── Checkboxes ────────────────────── */}
         <Grid item xs={12}>
           <FormControlLabel
             control={<Controller name="china" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />}
@@ -120,7 +109,7 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ── Commit term toggle ─────────────── */}
+        {/* ── Commit term ───────────────────── */}
         <Grid item xs={12}>
           <Typography gutterBottom>Commit Term</Typography>
           <Controller
@@ -141,7 +130,7 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ── Currency dropdown (200 px) ─────── */}
+        {/* ── Currency dropdown (200 px) ────── */}
         <Grid item xs={12}>
           <Typography gutterBottom>Currency</Typography>
           <Controller
