@@ -23,3 +23,4 @@ import { MenuItem, TextField } from "@mui/material";   // NEW
     )}
   />
 </Grid>
+export default CostCalculator;
