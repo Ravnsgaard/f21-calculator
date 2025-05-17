@@ -28,35 +28,37 @@ interface FormValues {
   currency: Currency;
 }
 
+/* 👉  Default quotas = Edge Global 30 */
 const defaults: FormValues = {
-  trafficTB: 1,
-  customDomains: 1,
-  computeBlocks: 1,
+  trafficTB: 3,
+  customDomains: 30,
+  computeBlocks: 10,
   china: false,
   support24x7: false,
   commitTerm: "3yr",
   currency: "EUR"
 };
 
-export function CostCalculator() {
+export default function CostCalculator() {
   const { control, watch } = useForm<FormValues>({ defaultValues: defaults });
   const v = watch();
 
-  // fetch FX rates on first non-EUR selection
-  const [ratesReady, setRatesReady] = useState(false);
+  /* fetch FX rates once a non-EUR currency is chosen */
+  const [, setReady] = useState(false);
   useEffect(() => {
-    if (!ratesReady && v.currency !== "EUR") {
-      ensureRates().then(() => setRatesReady(true));
-    }
-  }, [v.currency, ratesReady]);
+    if (v.currency !== "EUR") ensureRates().then(() => setReady(true));
+  }, [v.currency]);
 
   const { plan, cost } = recommend(v);
+
+  /* reusable widths */
+  const cell = { xs: 12, md: 6 };
 
   return (
     <Stack gap={4}>
       <Grid container spacing={2}>
-        {/* === Sliders ================================================== */}
-        <Grid item xs={12}>
+        {/* ─── Sliders ─────────────────────────────────────────────── */}
+        <Grid item {...cell}>
           <Typography gutterBottom>
             Traffic (TB/mo) — <strong>{v.trafficTB}</strong>
           </Typography>
@@ -68,7 +70,8 @@ export function CostCalculator() {
             )}
           />
         </Grid>
-        <Grid item xs={12}>
+
+        <Grid item {...cell}>
           <Typography gutterBottom>
             Custom Domains — <strong>{v.customDomains}</strong>
           </Typography>
@@ -80,7 +83,8 @@ export function CostCalculator() {
             )}
           />
         </Grid>
-        <Grid item xs={12}>
+
+        <Grid item {...cell}>
           <Typography gutterBottom>
             Compute Blocks — <strong>{v.computeBlocks}</strong>
           </Typography>
@@ -93,22 +97,23 @@ export function CostCalculator() {
           />
         </Grid>
 
-        {/* === Checkboxes ============================================== */}
-        <Grid item xs={12}>
+        {/* ─── Checkboxes ──────────────────────────────────────────── */}
+        <Grid item {...cell}>
           <FormControlLabel
             control={<Controller name="china" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />}
             label="Deploy in mainland China"
           />
         </Grid>
-        <Grid item xs={12}>
+
+        <Grid item {...cell}>
           <FormControlLabel
             control={<Controller name="support24x7" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />}
             label="24/7 Support"
           />
         </Grid>
 
-        {/* === Commit term toggle ====================================== */}
-        <Grid item xs={12}>
+        {/* ─── Commit term toggle ─────────────────────────────────── */}
+        <Grid item {...cell}>
           <Typography gutterBottom>Commit Term</Typography>
           <Controller
             name="commitTerm"
@@ -123,8 +128,8 @@ export function CostCalculator() {
           />
         </Grid>
 
-        {/* === Currency dropdown ======================================= */}
-        <Grid item xs={12}>
+        {/* ─── Currency dropdown ──────────────────────────────────── */}
+        <Grid item {...cell}>
           <Typography gutterBottom>Currency</Typography>
           <Controller
             name="currency"
@@ -151,5 +156,3 @@ export function CostCalculator() {
     </Stack>
   );
 }
-
-export default CostCalculator;
