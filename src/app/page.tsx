@@ -5,7 +5,7 @@ export default function HomePage() {
   return (
     <Container sx={{ py: 6 }}>
       <Typography variant="h4" gutterBottom>
-        IDO Edge Cost Calculator
+        IDO Edge Pricing Calculator
       </Typography>
       <CostCalculator />
     </Container>
