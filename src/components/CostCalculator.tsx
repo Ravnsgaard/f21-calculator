@@ -15,7 +15,9 @@ import { useForm, Controller } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { CommitTerm, Currency } from "../constants";
 import { recommend } from "../utils/recommend";
-import { loadRates } from "../utils/currency";
+import { loadRates, rate } from "../utils/currency";
+import { plans } from "../data/plans";
+import { PlanCarousel } from "./PlanCarousel";
 import { ResultCard } from "./ResultCard";
 
 interface FormValues {
@@ -28,7 +30,6 @@ interface FormValues {
   currency: Currency;
 }
 
-/* Default = Edge Global 30 */
 const defaults: FormValues = {
   trafficTB: 3,
   customDomains: 30,
@@ -42,22 +43,23 @@ const defaults: FormValues = {
 export default function CostCalculator() {
   const { control, watch } = useForm<FormValues>({ defaultValues: defaults });
   const v = watch();
-  const [, tick] = useState(0);            // used only to re-render after FX fetch
+  const [, bump] = useState(0);
 
-  /* load FX rates the first time a non-EUR currency is chosen */
+  /* load FX once */
   useEffect(() => {
-    if (v.currency !== "EUR") {
-      loadRates().then(() => tick((n) => n + 1));
-    }
+    if (v.currency !== "EUR") loadRates().then(() => bump((n) => n + 1));
   }, [v.currency]);
 
-  const { plan, cost } = recommend(v);     // costs stay in EUR; ResultCard does conversion
+  const { plan: best, cost: eur } = recommend(v);
+  const fx = rate(v.currency);
+  const cost = { base: eur.base * fx, overT: eur.overT * fx, overB: eur.overB * fx, total: eur.total * fx };
+
   const half = { sx: { width: "50%" } };
 
   return (
-    <Stack gap={4}>
+    <Stack spacing={4}>
+      {/* ── Controls ───────────────────────────────────────── */}
       <Grid container rowSpacing={3}>
-        {/* ── Sliders ───────────────────────── */}
         <Grid item xs={12}>
           <Typography gutterBottom>
             Traffic (TB/mo) — <strong>{v.trafficTB}</strong>
@@ -70,6 +72,7 @@ export default function CostCalculator() {
             )}
           />
         </Grid>
+
         <Grid item xs={12}>
           <Typography gutterBottom>
             Custom Domains — <strong>{v.customDomains}</strong>
@@ -82,6 +85,7 @@ export default function CostCalculator() {
             )}
           />
         </Grid>
+
         <Grid item xs={12}>
           <Typography gutterBottom>
             Compute Blocks — <strong>{v.computeBlocks}</strong>
@@ -95,7 +99,6 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ── Checkboxes ────────────────────── */}
         <Grid item xs={12}>
           <FormControlLabel
             control={<Controller name="china" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />}
@@ -109,19 +112,13 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ── Commit term ───────────────────── */}
         <Grid item xs={12}>
           <Typography gutterBottom>Commit Term</Typography>
           <Controller
             name="commitTerm"
             control={control}
             render={({ field }) => (
-              <ToggleButtonGroup
-                exclusive
-                {...half}
-                {...field}
-                onChange={(_, v) => v && field.onChange(v)}
-              >
+              <ToggleButtonGroup exclusive {...half} {...field} onChange={(_, v) => v && field.onChange(v)}>
                 <ToggleButton value="monthly">Monthly</ToggleButton>
                 <ToggleButton value="1yr">1 Year</ToggleButton>
                 <ToggleButton value="3yr">3 Years</ToggleButton>
@@ -130,7 +127,6 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ── Currency dropdown (200 px) ────── */}
         <Grid item xs={12}>
           <Typography gutterBottom>Currency</Typography>
           <Controller
@@ -154,7 +150,11 @@ export default function CostCalculator() {
         </Grid>
       </Grid>
 
-      <ResultCard plan={plan} cost={cost} currency={v.currency} />
+      {/* ── Carousel of base SKUs ─────────────────────────── */}
+      <PlanCarousel plans={plans} selectedId={best.id} currency={v.currency} />
+
+      {/* ── Detailed breakdown for the recommended plan ───── */}
+      <ResultCard plan={best} cost={cost} currency={v.currency} />
     </Stack>
   );
 }
