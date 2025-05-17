@@ -18,29 +18,25 @@ export function ResultCard({
   return (
     <Card variant="outlined" sx={{ mt: 2 }}>
       <CardContent>
-        <Typography variant="h6" gutterBottom>
-          {plan.name}
-        </Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography variant="h6">{plan.name}</Typography>
+          <Typography variant="h6">{fmt(cost.base, currency)}</Typography>
+        </Stack>
 
-        <Stack spacing={0.5} mb={1}>
+        <Stack spacing={0.5} mt={1}>
           <Typography variant="caption">Quotas / Features:</Typography>
           <Typography variant="caption">• {f.customDomains} custom domains</Typography>
           <Typography variant="caption">• {f.trafficTB} TB traffic / mo</Typography>
           <Typography variant="caption">• {f.computeBlocks} compute blocks</Typography>
-          {f.serviceHours !== undefined && (
-            <Typography variant="caption">• {f.serviceHours} service hours</Typography>
-          )}
+          {f.serviceHours && <Typography variant="caption">• {f.serviceHours} service hours</Typography>}
           <Typography variant="caption">• Logs retained {f.logRetentionDays} days</Typography>
           <Typography variant="caption">• China mainland: {f.china ? "✔️" : "—"}</Typography>
           <Typography variant="caption">• 24/7 Support: {f.support24x7 ? "✔️" : "—"}</Typography>
-          {f.radrSlaHours !== undefined && (
-            <Typography variant="caption">• RADR SLA: {f.radrSlaHours} h</Typography>
-          )}
+          {f.radrSlaHours && <Typography variant="caption">• RADR SLA: {f.radrSlaHours} h</Typography>}
         </Stack>
 
         <Divider sx={{ my: 1 }} />
 
-        <PriceLine label="Base" valueEUR={cost.base} currency={currency} />
         {cost.overT > 0 && <PriceLine label="Traffic overage" valueEUR={cost.overT} currency={currency} />}
         {cost.overB > 0 && (
           <PriceLine label="Compute-block overage" valueEUR={cost.overB} currency={currency} />
