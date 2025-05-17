@@ -43,59 +43,26 @@ export function CostCalculator() {
   return (
     <Stack gap={4}>
       <Grid container spacing={2}>
-        {/* Sliders */}
         <Grid item xs={12} md={4}>
           <Typography gutterBottom>Traffic (TB/mo)</Typography>
-          <Controller
-            name="trafficTB"
-            control={control}
-            render={({ field }) => <Slider {...field} min={1} max={100} step={1} marks valueLabelDisplay="auto" />}
-          />
+          <Controller name="trafficTB" control={control} render={({ field }) => <Slider {...field} min={1} max={100} step={1} marks valueLabelDisplay="auto" />} />
         </Grid>
         <Grid item xs={12} md={4}>
           <Typography gutterBottom>Custom Domains</Typography>
-          <Controller
-            name="customDomains"
-            control={control}
-            render={({ field }) => <Slider {...field} min={1} max={200} step={1} marks valueLabelDisplay="auto" />}
-          />
+          <Controller name="customDomains" control={control} render={({ field }) => <Slider {...field} min={1} max={200} step={1} marks valueLabelDisplay="auto" />} />
         </Grid>
         <Grid item xs={12} md={4}>
           <Typography gutterBottom>Compute Blocks</Typography>
-          <Controller
-            name="computeBlocks"
-            control={control}
-            render={({ field }) => <Slider {...field} min={1} max={100} step={1} marks valueLabelDisplay="auto" />}
-          />
+          <Controller name="computeBlocks" control={control} render={({ field }) => <Slider {...field} min={1} max={100} step={1} marks valueLabelDisplay="auto" />} />
         </Grid>
 
-        {/* Checkboxes */}
         <Grid item xs={12} md={4}>
-          <FormControlLabel
-            control={
-              <Controller
-                name="china"
-                control={control}
-                render={({ field }) => <Switch {...field} checked={field.value} />}
-              />
-            }
-            label="Deploy in mainland China"
-          />
+          <FormControlLabel control={<Controller name="china" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />} label="Deploy in mainland China" />
         </Grid>
         <Grid item xs={12} md={4}>
-          <FormControlLabel
-            control={
-              <Controller
-                name="support24x7"
-                control={control}
-                render={({ field }) => <Switch {...field} checked={field.value} />}
-              />
-            }
-            label="24/7 Support"
-          />
+          <FormControlLabel control={<Controller name="support24x7" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />} label="24/7 Support" />
         </Grid>
 
-        {/* Commit term */}
         <Grid item xs={12} md={4}>
           <Typography gutterBottom>Commit Term</Typography>
           <Controller
@@ -110,8 +77,6 @@ export function CostCalculator() {
             )}
           />
         </Grid>
-
-        {/* Currency */}
         <Grid item xs={12} md={4}>
           <Typography gutterBottom>Currency</Typography>
           <Controller
