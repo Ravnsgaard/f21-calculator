@@ -15,7 +15,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { CommitTerm, Currency } from "../constants";
 import { recommend } from "../utils/recommend";
-import { loadRates } from "../utils/currency";
+import { loadRates, rate } from "../utils/currency";
 import { ResultCard } from "./ResultCard";
 
 interface FormValues {
@@ -41,23 +41,29 @@ const defaults: FormValues = {
 
 export default function CostCalculator() {
   const { control, watch } = useForm<FormValues>({ defaultValues: defaults });
-  const v = watch();
-  const [ratesReady, setRatesReady] = useState(false);
+  const v = watch();                        // current form state
 
-  /* fetch FX rates once a non-EUR currency is chosen */
+  /* ensure FX rates loaded once user leaves EUR */
   useEffect(() => {
-    if (!ratesReady && v.currency !== "EUR") {
-      loadRates().then(() => setRatesReady(true)); // triggers re-render
-    }
-  }, [v.currency, ratesReady]);
+    if (v.currency !== "EUR") loadRates();
+  }, [v.currency]);
 
-  const { plan, cost } = recommend(v);
+  /* calculate plan & EUR costs, then convert here */
+  const { plan, cost: eur } = recommend(v);
+  const fx = rate(v.currency);
+  const cost = {
+    base: eur.base * fx,
+    overT: eur.overT * fx,
+    overB: eur.overB * fx,
+    total: eur.total * fx
+  };
+
   const half = { sx: { width: "50%" } };
 
   return (
     <Stack gap={4}>
       <Grid container rowSpacing={3}>
-        {/* ───── Sliders ───── */}
+        {/* ── Sliders ───────────────────────────── */}
         <Grid item xs={12}>
           <Typography gutterBottom>
             Traffic (TB/mo) — <strong>{v.trafficTB}</strong>
@@ -97,14 +103,13 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ───── Checkboxes ───── */}
+        {/* ── Checkboxes ───────────────────────── */}
         <Grid item xs={12}>
           <FormControlLabel
             control={<Controller name="china" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />}
             label="Deploy in mainland China"
           />
         </Grid>
-
         <Grid item xs={12}>
           <FormControlLabel
             control={<Controller name="support24x7" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />}
@@ -112,7 +117,7 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ───── Commit term ───── */}
+        {/* ── Commit term toggle ───────────────── */}
         <Grid item xs={12}>
           <Typography gutterBottom>Commit Term</Typography>
           <Controller
@@ -133,7 +138,7 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ───── Currency ───── */}
+        {/* ── Currency dropdown (200 px) ───────── */}
         <Grid item xs={12}>
           <Typography gutterBottom>Currency</Typography>
           <Controller
@@ -142,9 +147,8 @@ export default function CostCalculator() {
             render={({ field }) => (
               <TextField
                 select
-                fullWidth
-                {...half}
                 {...field}
+                sx={{ width: 200 }}      // ← narrower
                 onChange={(e) => field.onChange(e.target.value as Currency)}
               >
                 {["EUR", "USD", "DKK", "GBP", "SEK", "NOK"].map((c) => (
