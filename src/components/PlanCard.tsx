@@ -5,13 +5,13 @@ import { Currency } from "../constants";
 import { fmt } from "../utils/currency";
 
 const tint: Record<string, string> = {
-  "basic-2": "#ECEFF1",
-  "basic-5": "#CFD8DC",
-  "edge-regional": "#B3E5FC",
-  "edge-global-30": "#C8E6C9",
-  "edge-global-50": "#A5D6A7",
-  "edge-global-100": "#81C784",
-  "edge-dedicated": "#80DEEA"
+  "basic-2": "#BE2B7B",
+  "basic-5": "#8A3178",
+  "edge-regional": "#613773",
+  "edge-global-30": "#4E3A79",
+  "edge-global-50": "#424180",
+  "edge-global-100": "#2F4888",
+  "edge-dedicated": "#005297"
 };
 
 interface Props {
