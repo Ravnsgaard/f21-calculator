@@ -43,20 +43,26 @@ const defaults: FormValues = {
 export default function CostCalculator() {
   const { control, watch } = useForm<FormValues>({ defaultValues: defaults });
   const v = watch();
-  const [, bump] = useState(0);
+  const [, bump] = useState(0); // force re-render after FX fetch
 
+  /* load FX rates once a non-EUR currency is selected */
   useEffect(() => {
     if (v.currency !== "EUR") loadRates().then(() => bump((n) => n + 1));
   }, [v.currency]);
 
+  /* recommended plan & raw-EUR costs */
   const { plan: best, cost: eur } = recommend(v);
+
+  /* EUR price map for every plan under current commit term */
   const priceMap = Object.fromEntries(
     plans.map((p) => [p.id, p.monthlyRate * COMMIT_MULTIPLIER[v.commitTerm]])
   ) as Record<string, number>;
 
+  /* convert once for display */
   const fx = rate(v.currency);
   const costDisp = { overT: eur.overT * fx, overB: eur.overB * fx, total: eur.total * fx };
 
+  /* units for overage wording */
   const overTrafficTB = Math.max(0, v.trafficTB - best.features.trafficTB);
   const overBlocksPacks = Math.ceil(
     Math.max(0, v.computeBlocks - best.features.computeBlocks) / 10
@@ -66,10 +72,65 @@ export default function CostCalculator() {
 
   return (
     <Stack spacing={4}>
-      {/* ── Controls ─────────────────────────────────────── */}
+      {/* ─── Controls ───────────────────────────────────── */}
       <Grid container rowSpacing={3}>
-        {/* sliders & checkboxes unchanged … */}
-        {/* Commit term toggle (re-ordered & relabeled) */}
+        {/* Traffic slider */}
+        <Grid item xs={12}>
+          <Typography gutterBottom>
+            Traffic (TB/mo) — <strong>{v.trafficTB}</strong>
+          </Typography>
+          <Controller
+            name="trafficTB"
+            control={control}
+            render={({ field }) => (
+              <Slider {...field} {...half} min={1} max={100} step={1} marks valueLabelDisplay="auto" />
+            )}
+          />
+        </Grid>
+
+        {/* Domains slider */}
+        <Grid item xs={12}>
+          <Typography gutterBottom>
+            Custom Domains — <strong>{v.customDomains}</strong>
+          </Typography>
+          <Controller
+            name="customDomains"
+            control={control}
+            render={({ field }) => (
+              <Slider {...field} {...half} min={1} max={200} step={1} marks valueLabelDisplay="auto" />
+            )}
+          />
+        </Grid>
+
+        {/* Compute-blocks slider */}
+        <Grid item xs={12}>
+          <Typography gutterBottom>
+            Compute Blocks — <strong>{v.computeBlocks}</strong>
+          </Typography>
+          <Controller
+            name="computeBlocks"
+            control={control}
+            render={({ field }) => (
+              <Slider {...field} {...half} min={1} max={100} step={1} marks valueLabelDisplay="auto" />
+            )}
+          />
+        </Grid>
+
+        {/* Check-boxes */}
+        <Grid item xs={12}>
+          <FormControlLabel
+            control={<Controller name="china" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />}
+            label="Deploy in mainland China"
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <FormControlLabel
+            control={<Controller name="support24x7" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />}
+            label="24/7 Support"
+          />
+        </Grid>
+
+        {/* Commit-term toggle (re-ordered) */}
         <Grid item xs={12}>
           <Typography gutterBottom>Commit Term</Typography>
           <Controller
@@ -90,16 +151,34 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* Currency dropdown unchanged… */}
+        {/* Currency dropdown */}
+        <Grid item xs={12}>
+          <Typography gutterBottom>Currency</Typography>
+          <Controller
+            name="currency"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                select
+                {...field}
+                sx={{ width: 200 }}
+                onChange={(e) => field.onChange(e.target.value as Currency)}
+              >
+                {["EUR", "USD", "DKK", "GBP", "SEK", "NOK"].map((c) => (
+                  <MenuItem key={c} value={c}>
+                    {c}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+          />
+        </Grid>
       </Grid>
 
-      {/* ── Carousel & overage card ──────────────────────── */}
-      <PlanCarousel
-        plans={plans}
-        selectedId={best.id}
-        currency={v.currency}
-        priceMap={priceMap}
-      />
+      {/* ─── Carousel of base SKUs ─────────────────────── */}
+      <PlanCarousel plans={plans} selectedId={best.id} currency={v.currency} priceMap={priceMap} />
+
+      {/* ─── Overage breakdown ─────────────────────────── */}
       <ResultCard
         plan={best}
         costEUR={eur}
