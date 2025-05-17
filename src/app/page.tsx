@@ -1,5 +1,5 @@
 import { Container, Typography } from "@mui/material";
-import { CostCalculator } from "../components/CostCalculator";
+import CostCalculator from "../components/CostCalculator";
 
 export default function HomePage() {
   return (
