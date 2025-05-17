@@ -15,8 +15,8 @@ import { useForm, Controller } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { CommitTerm, Currency } from "../constants";
 import { recommend } from "../utils/recommend";
-import { ensureRates } from "../utils/currency";
-import { ResultCard } from "./ResultCard";          // ← named import
+import { loadRates } from "../utils/currency";
+import { ResultCard } from "./ResultCard";
 
 interface FormValues {
   trafficTB: number;
@@ -41,20 +41,23 @@ const defaults: FormValues = {
 
 export default function CostCalculator() {
   const { control, watch } = useForm<FormValues>({ defaultValues: defaults });
-  const v = watch();                                   // ← required
+  const v = watch();
+  const [ratesReady, setRatesReady] = useState(false);
 
-  // fetch FX rates once a non-EUR currency is picked
+  /* fetch FX rates once a non-EUR currency is chosen */
   useEffect(() => {
-    if (v.currency !== "EUR") ensureRates();
-  }, [v.currency]);
+    if (!ratesReady && v.currency !== "EUR") {
+      loadRates().then(() => setRatesReady(true)); // triggers re-render
+    }
+  }, [v.currency, ratesReady]);
 
   const { plan, cost } = recommend(v);
-  const half = { sx: { width: "50%" } };               // shared width
+  const half = { sx: { width: "50%" } };
 
   return (
     <Stack gap={4}>
       <Grid container rowSpacing={3}>
-        {/* ── Sliders ────────────────────────────────────────── */}
+        {/* ───── Sliders ───── */}
         <Grid item xs={12}>
           <Typography gutterBottom>
             Traffic (TB/mo) — <strong>{v.trafficTB}</strong>
@@ -94,7 +97,7 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ── Checkboxes ─────────────────────────────────────── */}
+        {/* ───── Checkboxes ───── */}
         <Grid item xs={12}>
           <FormControlLabel
             control={<Controller name="china" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />}
@@ -109,7 +112,7 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ── Commit term toggle ─────────────────────────────── */}
+        {/* ───── Commit term ───── */}
         <Grid item xs={12}>
           <Typography gutterBottom>Commit Term</Typography>
           <Controller
@@ -120,7 +123,7 @@ export default function CostCalculator() {
                 exclusive
                 {...half}
                 {...field}
-                onChange={(_, val) => val && field.onChange(val)}
+                onChange={(_, v) => v && field.onChange(v)}
               >
                 <ToggleButton value="monthly">Monthly</ToggleButton>
                 <ToggleButton value="1yr">1 Year</ToggleButton>
@@ -130,7 +133,7 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ── Currency dropdown ──────────────────────────────── */}
+        {/* ───── Currency ───── */}
         <Grid item xs={12}>
           <Typography gutterBottom>Currency</Typography>
           <Controller
