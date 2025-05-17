@@ -2,17 +2,20 @@ import type { Currency } from "../constants";
 
 const cache: Partial<Record<Currency, number>> = { EUR: 1 };
 
-/** Fetch (or return cached) EUR-base FX rates from our own API route. */
-export async function ensureRates() {
-  if (cache.USD) return cache;          // already populated
-  const res = await fetch("/api/rates").then(r => r.json());
-  Object.assign(cache, res as Record<Currency, number>);
-  return cache;
+export async function loadRates(): Promise<void> {
+  if (cache.USD) return;                         // already fetched
+  const r = await fetch("/api/rates").then((res) => res.json());
+  Object.assign(cache, r as Record<Currency, number>);
+}
+
+export function getRate(c: Currency) {
+  return cache[c] ?? 1;
 }
 
 export function fmt(eur: number, currency: Currency) {
-  const rate = cache[currency] ?? 1;
-  return new Intl.NumberFormat("en", { style: "currency", currency, maximumFractionDigits: 0 }).format(
-    eur * rate
-  );
+  return new Intl.NumberFormat("en", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0
+  }).format(eur * getRate(currency));
 }
