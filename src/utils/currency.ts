@@ -2,20 +2,11 @@ import type { Currency } from "../constants";
 
 const cache: Partial<Record<Currency, number>> = { EUR: 1 };
 
+/** Fetch (or return cached) EUR-base FX rates from our own API route. */
 export async function ensureRates() {
-  if (cache.USD) return cache; // all rates already cached
-
-  const symbols = "USD,DKK,GBP,SEK,NOK";
-  const res = await fetch(`https://api.exchangerate.host/latest?base=EUR&symbols=${symbols}`);
-  const { rates } = (await res.json()) as { rates: Record<string, number> };
-
-  Object.assign(cache, {
-    USD: rates.USD,
-    DKK: rates.DKK,
-    GBP: rates.GBP,
-    SEK: rates.SEK,
-    NOK: rates.NOK
-  });
+  if (cache.USD) return cache;          // already populated
+  const res = await fetch("/api/rates").then(r => r.json());
+  Object.assign(cache, res as Record<Currency, number>);
   return cache;
 }
 
