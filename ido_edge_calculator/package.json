@@ -1,0 +1,26 @@
+{
+  "name": "nextjs-cost-calculator",
+  "version": "0.2.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.15.17",
+    "@mui/material": "^5.15.17",
+    "next": "14.2.3",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-hook-form": "^7.51.0"
+  },
+  "devDependencies": {
+    "typescript": "5.5.0",
+    "@types/node": "20.11.28",
+    "@types/react": "18.3.5",
+    "@types/react-dom": "18.3.3"
+  }
+}
