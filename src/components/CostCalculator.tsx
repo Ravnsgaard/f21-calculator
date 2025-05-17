@@ -1,5 +1,14 @@
 "use client";
-import { Grid, Slider, Typography, FormControlLabel, Switch, ToggleButtonGroup, ToggleButton, Stack } from "@mui/material";
+import {
+  Grid,
+  Slider,
+  Typography,
+  FormControlLabel,
+  Switch,
+  ToggleButtonGroup,
+  ToggleButton,
+  Stack
+} from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { CommitTerm, Currency } from "../constants";
@@ -29,41 +38,69 @@ const defaults: FormValues = {
 
 export function CostCalculator() {
   const { control, watch } = useForm<FormValues>({ defaultValues: defaults });
-  const values = watch();
+  const v = watch();
 
+  /* fetch exchange rates when currency ↻ */
   const [ratesReady, setRatesReady] = useState(false);
   useEffect(() => {
-    if (!ratesReady && values.currency !== "EUR") {
-      ensureRates().then(() => setRatesReady(true));
-    }
-  }, [values.currency, ratesReady]);
+    if (!ratesReady && v.currency !== "EUR") ensureRates().then(() => setRatesReady(true));
+  }, [v.currency, ratesReady]);
 
-  const { plan, cost } = recommend(values);
+  const { plan, cost } = recommend(v);
 
   return (
     <Stack gap={4}>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={4}>
-          <Typography gutterBottom>Traffic (TB/mo)</Typography>
-          <Controller name="trafficTB" control={control} render={({ field }) => <Slider {...field} min={1} max={100} step={1} marks valueLabelDisplay="auto" />} />
+        {/* Traffic */}
+        <Grid item xs={12}>
+          <Typography gutterBottom>
+            Traffic (TB/mo) — <strong>{v.trafficTB}</strong>
+          </Typography>
+          <Controller
+            name="trafficTB"
+            control={control}
+            render={({ field }) => <Slider {...field} min={1} max={100} step={1} marks valueLabelDisplay="auto" />}
+          />
         </Grid>
-        <Grid item xs={12} md={4}>
-          <Typography gutterBottom>Custom Domains</Typography>
-          <Controller name="customDomains" control={control} render={({ field }) => <Slider {...field} min={1} max={200} step={1} marks valueLabelDisplay="auto" />} />
+        {/* Domains */}
+        <Grid item xs={12}>
+          <Typography gutterBottom>
+            Custom Domains — <strong>{v.customDomains}</strong>
+          </Typography>
+          <Controller
+            name="customDomains"
+            control={control}
+            render={({ field }) => <Slider {...field} min={1} max={200} step={1} marks valueLabelDisplay="auto" />}
+          />
         </Grid>
-        <Grid item xs={12} md={4}>
-          <Typography gutterBottom>Compute Blocks</Typography>
-          <Controller name="computeBlocks" control={control} render={({ field }) => <Slider {...field} min={1} max={100} step={1} marks valueLabelDisplay="auto" />} />
+        {/* Blocks */}
+        <Grid item xs={12}>
+          <Typography gutterBottom>
+            Compute Blocks — <strong>{v.computeBlocks}</strong>
+          </Typography>
+          <Controller
+            name="computeBlocks"
+            control={control}
+            render={({ field }) => <Slider {...field} min={1} max={100} step={1} marks valueLabelDisplay="auto" />}
+          />
         </Grid>
 
-        <Grid item xs={12} md={4}>
-          <FormControlLabel control={<Controller name="china" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />} label="Deploy in mainland China" />
+        {/* Check-boxes */}
+        <Grid item xs={12}>
+          <FormControlLabel
+            control={<Controller name="china" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />}
+            label="Deploy in mainland China"
+          />
         </Grid>
-        <Grid item xs={12} md={4}>
-          <FormControlLabel control={<Controller name="support24x7" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />} label="24/7 Support" />
+        <Grid item xs={12}>
+          <FormControlLabel
+            control={<Controller name="support24x7" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />}
+            label="24/7 Support"
+          />
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        {/* Commit term */}
+        <Grid item xs={12}>
           <Typography gutterBottom>Commit Term</Typography>
           <Controller
             name="commitTerm"
@@ -77,7 +114,9 @@ export function CostCalculator() {
             )}
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+
+        {/* Currency */}
+        <Grid item xs={12}>
           <Typography gutterBottom>Currency</Typography>
           <Controller
             name="currency"
@@ -92,7 +131,8 @@ export function CostCalculator() {
           />
         </Grid>
       </Grid>
-      <ResultCard plan={plan} cost={cost} currency={values.currency} />
+
+      <ResultCard plan={plan} cost={cost} currency={v.currency} />
     </Stack>
   );
 }
