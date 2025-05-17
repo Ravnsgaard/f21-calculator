@@ -41,14 +41,17 @@ const defaults: FormValues = {
 
 export default function CostCalculator() {
   const { control, watch } = useForm<FormValues>({ defaultValues: defaults });
-  const v = watch();                        // current form state
+  const v = watch();
 
-  /* ensure FX rates loaded once user leaves EUR */
+  /* trigger a re-render after FX rates arrive */
+  const [, bump] = useState(0);
   useEffect(() => {
-    if (v.currency !== "EUR") loadRates();
+    if (v.currency !== "EUR") {
+      loadRates().then(() => bump((n) => n + 1));
+    }
   }, [v.currency]);
 
-  /* calculate plan & EUR costs, then convert here */
+  /* compute costs – convert with latest rate() every render */
   const { plan, cost: eur } = recommend(v);
   const fx = rate(v.currency);
   const cost = {
@@ -63,7 +66,7 @@ export default function CostCalculator() {
   return (
     <Stack gap={4}>
       <Grid container rowSpacing={3}>
-        {/* ── Sliders ───────────────────────────── */}
+        {/* ── Sliders ─────────────────────────── */}
         <Grid item xs={12}>
           <Typography gutterBottom>
             Traffic (TB/mo) — <strong>{v.trafficTB}</strong>
@@ -103,7 +106,7 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ── Checkboxes ───────────────────────── */}
+        {/* ── Checkboxes ─────────────────────── */}
         <Grid item xs={12}>
           <FormControlLabel
             control={<Controller name="china" control={control} render={({ field }) => <Switch {...field} checked={field.value} />} />}
@@ -117,7 +120,7 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ── Commit term toggle ───────────────── */}
+        {/* ── Commit term toggle ─────────────── */}
         <Grid item xs={12}>
           <Typography gutterBottom>Commit Term</Typography>
           <Controller
@@ -138,7 +141,7 @@ export default function CostCalculator() {
           />
         </Grid>
 
-        {/* ── Currency dropdown (200 px) ───────── */}
+        {/* ── Currency dropdown (200 px) ─────── */}
         <Grid item xs={12}>
           <Typography gutterBottom>Currency</Typography>
           <Controller
@@ -148,7 +151,7 @@ export default function CostCalculator() {
               <TextField
                 select
                 {...field}
-                sx={{ width: 200 }}      // ← narrower
+                sx={{ width: 200 }}
                 onChange={(e) => field.onChange(e.target.value as Currency)}
               >
                 {["EUR", "USD", "DKK", "GBP", "SEK", "NOK"].map((c) => (
